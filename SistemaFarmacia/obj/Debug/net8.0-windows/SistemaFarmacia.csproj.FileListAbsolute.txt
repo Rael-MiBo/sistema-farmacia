@@ -27,3 +27,4 @@ C:\Users\miran\OneDrive\Documentos\GitHub\sistema-farmacia\SistemaFarmacia\obj\D
 C:\Users\miran\OneDrive\Documentos\GitHub\sistema-farmacia\SistemaFarmacia\obj\Debug\net8.0-windows\SistemaFarmacia.pdb
 C:\Users\miran\OneDrive\Documentos\GitHub\sistema-farmacia\SistemaFarmacia\obj\Debug\net8.0-windows\SistemaFarmacia.genruntimeconfig.cache
 C:\Users\miran\OneDrive\Documentos\GitHub\sistema-farmacia\SistemaFarmacia\obj\Debug\net8.0-windows\ref\SistemaFarmacia.dll
+C:\Users\miran\OneDrive\Documentos\GitHub\sistema-farmacia\SistemaFarmacia\obj\Debug\net8.0-windows\SistemaFarmacia.sourcelink.json

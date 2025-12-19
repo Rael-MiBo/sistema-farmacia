@@ -1,8 +1,7 @@
 using System;
-using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Collections.Generic;
+using System.Data;
 using MySql.Data.MySqlClient;
 
 namespace SistemaFarmacia
@@ -15,8 +14,8 @@ namespace SistemaFarmacia
 
         public FormProdutos()
         {
-            this.Text = "Cadastro de Produtos - FarmaciaERP";
-            this.Size = new Size(800, 600);
+            this.Text = "Gerenciar Produtos - FarmaciaERP";
+            this.Size = new Size(850, 650);
             this.StartPosition = FormStartPosition.CenterParent;
             ConfigurarLayout();
             AtualizarGrid();
@@ -24,27 +23,52 @@ namespace SistemaFarmacia
 
         private void ConfigurarLayout()
         {
-            Panel pnlCadastro = new Panel { Dock = DockStyle.Top, Height = 150, Padding = new Padding(10), BackColor = Color.WhiteSmoke };
+            Panel pnlCadastro = new Panel { Dock = DockStyle.Top, Height = 180, Padding = new Padding(15), BackColor = Color.WhiteSmoke };
             
-            txtCodigo = CriarCampo(pnlCadastro, "Código de Barras:", 10, 20);
-            txtNome = CriarCampo(pnlCadastro, "Nome do Produto:", 10, 70);
-            txtPreco = CriarCampo(pnlCadastro, "Preço (R$):", 300, 70);
+            txtCodigo = CriarCampo(pnlCadastro, "Código de Barras:", 15, 15);
+            txtNome = CriarCampo(pnlCadastro, "Nome do Produto:", 15, 75);
+            txtPreco = CriarCampo(pnlCadastro, "Preço (R$):", 300, 75);
 
+            // Botão Salvar/Atualizar
             Button btnSalvar = new Button { 
-                Text = "SALVAR PRODUTO", 
-                Left = 550, Top = 85, Width = 150, Height = 40, 
-                BackColor = Color.SeaGreen, ForeColor = Color.White, FlatStyle = FlatStyle.Flat 
+                Text = "SALVAR / ATUALIZAR", 
+                Left = 580, Top = 85, Width = 180, Height = 40, 
+                BackColor = Color.SeaGreen, ForeColor = Color.White, 
+                FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold)
             };
             btnSalvar.Click += (s, e) => SalvarProduto();
+
+            // Botão Excluir
+            Button btnExcluir = new Button { 
+                Text = "EXCLUIR PRODUTO", 
+                Left = 580, Top = 130, Width = 180, Height = 35, 
+                BackColor = Color.Firebrick, ForeColor = Color.White, 
+                FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 9, FontStyle.Bold)
+            };
+            btnExcluir.Click += (s, e) => ExcluirProduto();
+
+            // Botão Limpar
+            Button btnLimpar = new Button { 
+                Text = "LIMPAR CAMPOS", 
+                Left = 580, Top = 40, Width = 180, Height = 30, 
+                BackColor = Color.Gray, ForeColor = Color.White, FlatStyle = FlatStyle.Flat 
+            };
+            btnLimpar.Click += (s, e) => LimparCampos();
+
             pnlCadastro.Controls.Add(btnSalvar);
+            pnlCadastro.Controls.Add(btnExcluir);
+            pnlCadastro.Controls.Add(btnLimpar);
 
             gridProdutos = new DataGridView { 
                 Dock = DockStyle.Fill, 
                 BackgroundColor = Color.White, 
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 AllowUserToAddRows = false,
-                ReadOnly = true
+                ReadOnly = true,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect
             };
+
+            gridProdutos.CellClick += GridProdutos_CellClick;
 
             this.Controls.Add(gridProdutos);
             this.Controls.Add(pnlCadastro);
@@ -52,11 +76,25 @@ namespace SistemaFarmacia
 
         private TextBox CriarCampo(Panel p, string label, int x, int y)
         {
-            Label lbl = new Label { Text = label, Left = x, Top = y, AutoSize = true };
-            TextBox txt = new TextBox { Left = x, Top = y + 20, Width = 250, Font = new Font("Segoe UI", 10) };
+            Label lbl = new Label { Text = label, Left = x, Top = y, AutoSize = true, Font = new Font("Segoe UI", 9) };
+            TextBox txt = new TextBox { Left = x, Top = y + 20, Width = 250, Font = new Font("Segoe UI", 11) };
             p.Controls.Add(lbl);
             p.Controls.Add(txt);
             return txt;
+        }
+
+        private void GridProdutos_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                DataGridViewRow row = gridProdutos.Rows[e.RowIndex];
+                txtCodigo.Text = row.Cells["Código"].Value.ToString();
+                txtNome.Text = row.Cells["Nome"].Value.ToString();
+                txtPreco.Text = row.Cells["Preço (R$)"].Value.ToString();
+                
+                txtCodigo.ReadOnly = true; 
+                txtCodigo.BackColor = Color.LightGray;
+            }
         }
 
         private void SalvarProduto()
@@ -67,7 +105,10 @@ namespace SistemaFarmacia
             {
                 try {
                     conn.Open();
-                    string sql = "INSERT INTO Produtos (codigo_barras, nome, preco) VALUES (@c, @n, @p) ON DUPLICATE KEY UPDATE nome=@n, preco=@p";
+                    string sql = @"INSERT INTO Produtos (codigo_barras, nome, preco) 
+                                   VALUES (@c, @n, @p) 
+                                   ON DUPLICATE KEY UPDATE nome=@n, preco=@p";
+
                     using (var cmd = new MySqlCommand(sql, conn))
                     {
                         cmd.Parameters.AddWithValue("@c", txtCodigo.Text);
@@ -75,10 +116,41 @@ namespace SistemaFarmacia
                         cmd.Parameters.AddWithValue("@p", decimal.Parse(txtPreco.Text));
                         cmd.ExecuteNonQuery();
                     }
-                    MessageBox.Show("Produto salvo com sucesso!");
+                    MessageBox.Show("Operação realizada!");
                     LimparCampos();
                     AtualizarGrid();
                 } catch (Exception ex) { MessageBox.Show("Erro: " + ex.Message); }
+            }
+        }
+
+        private void ExcluirProduto()
+        {
+            if (string.IsNullOrWhiteSpace(txtCodigo.Text))
+            {
+                MessageBox.Show("Selecione um produto na lista para excluir!");
+                return;
+            }
+
+            var confirmacao = MessageBox.Show($"Tem certeza que deseja excluir o produto {txtNome.Text}?", 
+                                            "Confirmar Exclusão", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+            if (confirmacao == DialogResult.Yes)
+            {
+                using (var conn = new MySqlConnection(connString))
+                {
+                    try {
+                        conn.Open();
+                        string sql = "DELETE FROM Produtos WHERE codigo_barras = @c";
+                        using (var cmd = new MySqlCommand(sql, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@c", txtCodigo.Text);
+                            cmd.ExecuteNonQuery();
+                        }
+                        MessageBox.Show("Produto removido com sucesso!");
+                        LimparCampos();
+                        AtualizarGrid();
+                    } catch (Exception ex) { MessageBox.Show("Erro ao excluir: " + ex.Message); }
+                }
             }
         }
 
@@ -86,18 +158,22 @@ namespace SistemaFarmacia
         {
             using (var conn = new MySqlConnection(connString))
             {
-                conn.Open();
-                string sql = "SELECT codigo_barras AS 'Código', nome AS 'Nome', preco AS 'Preço (R$)' FROM Produtos";
-                MySqlDataAdapter adapter = new MySqlDataAdapter(sql, conn);
-                System.Data.DataTable dt = new System.Data.DataTable();
-                adapter.Fill(dt);
-                gridProdutos.DataSource = dt;
+                try {
+                    conn.Open();
+                    string sql = "SELECT codigo_barras AS 'Código', nome AS 'Nome', preco AS 'Preço (R$)' FROM Produtos ORDER BY nome";
+                    MySqlDataAdapter adapter = new MySqlDataAdapter(sql, conn);
+                    DataTable dt = new DataTable();
+                    adapter.Fill(dt);
+                    gridProdutos.DataSource = dt;
+                } catch (Exception ex) { MessageBox.Show("Erro ao carregar lista: " + ex.Message); }
             }
         }
 
         private void LimparCampos()
         {
-            txtNome.Clear(); txtPreco.Clear(); txtCodigo.Clear(); txtCodigo.Focus();
+            txtNome.Clear(); txtPreco.Clear(); txtCodigo.Clear(); 
+            txtCodigo.ReadOnly = false; txtCodigo.BackColor = Color.White;
+            txtCodigo.Focus();
         }
     }
 }
