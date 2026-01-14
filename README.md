@@ -1,2 +1,2 @@
 # sistema-farmacia
-Um sistema de farmácia usando C#/SQL
+Um sistema de farmácia usando C#/SQL.
